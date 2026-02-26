@@ -23,7 +23,7 @@ const page = () => {
     data: category,
     error,
     isLoading,
-  } = useSWR("https://web-bot-node-bqye.onrender.com/api/categories", fetcher);
+  } = useSWR("https://food-api-7a58.onrender.com/api/categories", fetcher);
 
   const catSellect = category?.map((item) => {
     return { value: item._id, label: item.name };
@@ -149,9 +149,3 @@ const page = () => {
 };
 
 export default page;
-
-
-
-
-
-
