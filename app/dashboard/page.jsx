@@ -1,6 +1,6 @@
 "use client";
-import Dash_Card_List from "@/components/Cards/Dash_Card_List";
-import Dash_Nav from "@/components/Nav/Dash_Nav";
+import Dash_Card_List from "components/Cards/Dash_Card_List";
+import Dash_Nav from "components/Nav/Dash_Nav";
 import { Container } from "@mantine/core";
 import React from "react";
 import useSWR from "swr";
