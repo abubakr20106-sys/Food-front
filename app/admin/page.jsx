@@ -113,8 +113,6 @@ const CSS = `
 .stat-n{font-size:30px;font-weight:800;color:var(--text);line-height:1}
 .stat-l{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-top:4px}
 
-
-
 /* BOX & TABLE */
 .box{background:var(--white);border:1px solid var(--border);border-radius:16px;overflow:hidden}
 .box-head{padding:14px 18px;border-bottom:1px solid var(--border);font-size:13.5px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:10px}
@@ -138,17 +136,61 @@ const CSS = `
 
 /* PRODUCTS GRID */
 .p-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:16px}
-.p-card{background:var(--white);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:all .2s}
-.p-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.09);transform:translateY(-2px)}
+.p-card{background:var(--white);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:all .22s cubic-bezier(.25,.8,.25,1)}
+.p-card:hover{box-shadow:0 8px 28px rgba(0,0,0,.11);transform:translateY(-3px)}
+.p-img-wrap{overflow:hidden}
 .p-img{width:100%;aspect-ratio:1;object-fit:cover;background:#f3f4f6;display:block}
 .p-body{padding:11px}
 .p-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
 .p-cat{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--red-light);color:var(--red);margin-bottom:6px}
 .p-desc{font-size:11.5px;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:32px;margin-bottom:7px}
 .p-price{font-size:14px;font-weight:800;color:var(--red)}
-.p-acts{display:flex;justify-content:flex-end;gap:6px;margin-top:9px;padding-top:9px;border-top:1px solid var(--border)}
 
-/* BUTTONS */
+/* ===== PRODUCT CARD ACTION BUTTONS ===== */
+.p-acts{
+  display:flex;
+  gap:7px;
+  margin-top:10px;
+  padding-top:10px;
+  border-top:1px solid var(--border);
+}
+.p-act-edit{
+  flex:1;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  padding:8px 6px;
+  border-radius:10px;
+  border:1.5px solid #e5e7eb;
+  background:#f9fafb;
+  color:#374151;
+  font-size:12px;font-weight:700;
+  cursor:pointer;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.p-act-edit:hover{
+  background:#111827;
+  border-color:#111827;
+  color:#fff;
+}
+.p-act-delete{
+  flex:1;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  padding:8px 6px;
+  border-radius:10px;
+  border:1.5px solid #fecaca;
+  background:#fff5f5;
+  color:#dc2626;
+  font-size:12px;font-weight:700;
+  cursor:pointer;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.p-act-delete:hover{
+  background:#dc2626;
+  border-color:#dc2626;
+  color:#fff;
+}
+/* ======================================= */
+
+/* BUTTONS (non-product-card) */
 .ibtn{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all .15s}
 .ibtn.e:hover{background:#eff6ff;border-color:#bfdbfe;color:#2563eb}
 .ibtn.d:hover{background:var(--red-light);border-color:#fca5a5;color:var(--red)}
@@ -221,7 +263,15 @@ select.finput{cursor:pointer}
   .main{margin-left:0}
   .hamburger{display:flex}
   .fgrid{grid-template-columns:1fr}
-  .p-grid{grid-template-columns:repeat(2,1fr)}
+  .p-grid{grid-template-columns:1fr}
+  .p-card{display:flex;flex-direction:column}
+  .p-img-wrap{width:100%}
+  .p-img{width:100%;height:200px;aspect-ratio:unset;object-fit:cover}
+  .p-body{padding:14px}
+  .p-desc{display:block}
+  .p-name{font-size:15px}
+  .p-price{font-size:16px}
+  .p-act-edit,.p-act-delete{padding:11px 8px;font-size:13px}
   .content{padding:14px}
   .topbar{padding:12px 14px}
   .filters-bar{gap:6px}
@@ -553,7 +603,6 @@ function Dashboard({ onLogout }) {
   const [selCat, setSelCat] = useState(null);
   const [notif, setNotif] = useState(null);
 
-  // Filter & sort states
   const [search, setSearch] = useState("");
   const [filterCat, setFilterCat] = useState("");
   const [savingProduct, setSavingProduct] = useState(false);
@@ -631,17 +680,18 @@ function Dashboard({ onLogout }) {
           name: form.name,
           description: form.description,
           image: form.image,
-          category: form.category,
+          category: String(form.category).trim(),
           price: Number(form.price),
         }),
       });
       if (res.ok) {
         await mutProds();
+        const wasEdit = !!selItem;
         resetF();
         setSelItem(null);
         setEditOpen(false);
-        setTab("products");
-        toast(selItem ? "Tahrirlandi!" : "Qo'shildi!");
+        if (!wasEdit) setTab("products");
+        toast(wasEdit ? "Tahrirlandi!" : "Qo'shildi!");
       } else toast(await getErrMsg(res), "e");
     } catch (err) {
       toast("Aloqa uzildi: " + (err.message || ""), "e");
@@ -758,10 +808,8 @@ function Dashboard({ onLogout }) {
     [categories, gl],
   );
 
-  // Filtered & sorted products
   const filteredProducts = useMemo(() => {
     let list = [...products];
-    // Search
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       list = list.filter(
@@ -770,7 +818,6 @@ function Dashboard({ onLogout }) {
           gl(p.description).toLowerCase().includes(q),
       );
     }
-    // Category filter
     if (filterCat) {
       list = list.filter((p) => (p.category?._id || p.category) === filterCat);
     }
@@ -944,7 +991,6 @@ function Dashboard({ onLogout }) {
                 <div className="box">
                   {/* FILTERS */}
                   <div className="filters-bar">
-                    {/* Search */}
                     <div className="search-wrap">
                       <IconSearch
                         size={14}
@@ -972,8 +1018,6 @@ function Dashboard({ onLogout }) {
                         </button>
                       )}
                     </div>
-
-                    {/* Category filter */}
                     <select
                       className="fsel"
                       value={filterCat}
@@ -986,7 +1030,6 @@ function Dashboard({ onLogout }) {
                         </option>
                       ))}
                     </select>
-
                     <span className="results-count">
                       {filteredProducts.length} ta
                     </span>
@@ -1012,15 +1055,18 @@ function Dashboard({ onLogout }) {
                     <div className="p-grid">
                       {filteredProducts.map((item) => (
                         <div key={item._id} className="p-card">
-                          <img
-                            src={item.image}
-                            className="p-img"
-                            alt={gl(item.name)}
-                            onError={(e) => {
-                              e.target.src =
-                                "https://placehold.co/400x400/f3f4f6/9ca3af?text=Rasm+yo%27q";
-                            }}
-                          />
+                          {/* Image wrapper */}
+                          <div className="p-img-wrap">
+                            <img
+                              src={item.image}
+                              className="p-img"
+                              alt={gl(item.name)}
+                              onError={(e) => {
+                                e.target.src =
+                                  "https://placehold.co/400x400/f3f4f6/9ca3af?text=Rasm+yo%27q";
+                              }}
+                            />
+                          </div>
                           <div className="p-body">
                             <div className="p-name">{gl(item.name)}</div>
                             <div className="p-cat">
@@ -1034,31 +1080,36 @@ function Dashboard({ onLogout }) {
                             </div>
                             <div className="p-acts">
                               <button
-                                className="ibtn e"
+                                className="p-act-edit"
                                 onClick={() => {
                                   setSelItem(item);
+                                  const catId = item.category?._id
+                                    ? String(item.category._id)
+                                    : item.category
+                                      ? String(item.category)
+                                      : "";
                                   setForm({
                                     name: gl(item.name),
                                     description: gl(item.description),
                                     image: item.image || "",
-                                    category: String(
-                                      item.category?._id || item.category || "",
-                                    ),
+                                    category: catId,
                                     price: item.price || "",
                                   });
                                   setEditOpen(true);
                                 }}
                               >
                                 <IconPencil size={13} />
+                                Tahrirlash
                               </button>
                               <button
-                                className="ibtn d"
+                                className="p-act-delete"
                                 onClick={() => {
                                   setSelItem(item);
                                   setDelOpen(true);
                                 }}
                               >
                                 <IconTrash size={13} />
+                                O'chirish
                               </button>
                             </div>
                           </div>
